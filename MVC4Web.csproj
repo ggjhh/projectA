@@ -121,8 +121,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="App_Data\Decrypt.cs" />
     <Compile Include="App_Data\Global.cs" />
     <Compile Include="App_Data\Common.cs" />
+    <Compile Include="App_Data\Text.cs" />
     <Compile Include="App_Data\Xml.cs" />
     <Compile Include="App_Data\Time.cs" />
     <Compile Include="Controllers\ControllerBase.cs" />
