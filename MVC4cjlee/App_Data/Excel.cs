@@ -25,7 +25,8 @@ namespace MVC4cjlee.Utility
         /// <param name="strWorkSheetName">시트명</param>
         public void Add(DataTable objDT, Dictionary<string, string> objDictionary, string strWorkSheetName)
         {
-            objDT.TableName = strWorkSheetName;
+            //시트명은 31자까지 가능
+            objDT.TableName = (strWorkSheetName.Length > 31) ? strWorkSheetName.Substring(0, 31) : strWorkSheetName;
             HttpContext.Current.Response.Clear();
             HttpContext.Current.Response.Buffer = true;
             HttpContext.Current.Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -66,7 +67,8 @@ namespace MVC4cjlee.Utility
         /// <param name="intColumnNum"></param>
         public void Add(DataTable objDT, Dictionary<string, string> objDictionary, string strWorkSheetName, int intRowNum, int intColumnNum)
         {
-            objDT.TableName = strWorkSheetName;
+            //시트명은 31자까지 가능
+            objDT.TableName = (strWorkSheetName.Length > 31) ? strWorkSheetName.Substring(0, 31) : strWorkSheetName;
             string[] arrColumnName = new string[objDictionary.Count()];
             int intLoop = 0;
 
@@ -236,6 +238,42 @@ namespace MVC4cjlee.Utility
                 objDT.Rows.Add(dr);
             }
             return objDT;
+        }
+
+
+        /// <summary>
+        /// CSV 파일 다운로드
+        /// </summary>
+        /// <param name="objDT">리스트 데이터 DataTable</param>
+        /// <param name="strFileName">파일명</param>
+        public static void ExportCSV(DataTable objDT, string strFileName)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < objDT.Columns.Count; i++)
+            {
+                sb.Append(objDT.Columns[i].ColumnName + ',');
+            }
+            sb.Append("\r\n"); //new line
+            for (int i = 0; i < objDT.Rows.Count; i++)
+            {
+                for (int j = 0; j < objDT.Columns.Count; j++)
+                {
+                    sb.Append(objDT.Rows[i][j].ToString().Replace(",", ";") + ',');
+                }
+                sb.Append("\r\n");
+            }
+
+            objDT.TableName = (strFileName.Length > 31) ? strFileName.Substring(0, 31) : strFileName; //시트명은 31자까지 가능
+            HttpContext.Current.Response.Clear();
+            HttpContext.Current.Response.Buffer = true;
+            HttpContext.Current.Response.ContentType = "application/vnd.ms-excel";
+            HttpContext.Current.Response.AddHeader("Content-Disposition", string.Concat("attachment;filename=\"", HttpUtility.UrlEncode(strFileName + ".csv", Encoding.GetEncoding("UTF-8")).Replace("+", "%20") + "\""));
+
+            HttpContext.Current.Response.Charset = "euc-kr"; //csv 한글 처리
+            HttpContext.Current.Response.ContentEncoding = Encoding.GetEncoding("euc-kr");
+            HttpContext.Current.Response.Output.Write(sb.ToString());
+            HttpContext.Current.Response.Flush();
+            HttpContext.Current.Response.End();
         }
     }
 }
