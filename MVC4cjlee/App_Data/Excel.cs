@@ -275,5 +275,99 @@ namespace MVC4cjlee.Utility
             HttpContext.Current.Response.Flush();
             HttpContext.Current.Response.End();
         }
+
+
+        #region Export Excel Document
+        ///================================================================
+        /// <summary>
+        /// 서버에 올려진 엑셀 포멧파일에 DB값을 채워서 다운로드
+        /// </summary>
+        ///================================================================
+        public void ExcelDoc_Export(DataTable objDT)
+        {
+            string strExcelDocReadFile = "";    //엑셀 포맷 경로(서버구분에 따라 둘 것)
+            string strSaveFileName = "";        //엑셀파일 명
+            try
+            {
+                var workbook = new XLWorkbook(strExcelDocReadFile);  //기존 엑셀 열기 
+                var worksheet = workbook.Worksheet(1);               //첫번째 sheet열기 
+                worksheet.Protect("*********");                      //시트 보호
+
+                //시트별로 설정함
+                #region 프린트 설정
+                worksheet.PageSetup.PaperSize = XLPaperSize.A4Paper;         //인쇄 사이즈 설정
+                worksheet.PageSetup.PageOrientation = XLPageOrientation.Landscape; //가로로 인쇄
+                worksheet.PageSetup.Margins.Top = 0.1;                         //인쇄여백설정
+                worksheet.PageSetup.Margins.Bottom = 0.1;
+                worksheet.PageSetup.Margins.Left = 0.1;
+                worksheet.PageSetup.Margins.Right = 0.1;
+                worksheet.PageSetup.Margins.Footer = 0;
+                worksheet.PageSetup.Margins.Header = 0;
+                worksheet.PageSetup.FitToPages(1, 0);                               //한페이지에 모든 열 맞추기 Fit all columns on one page
+                #endregion
+
+                int intStartIndex = objDT.Rows.Count;
+                if (objDT != null)
+                {
+                    worksheet.Cell("D5").Value = string.Concat(objDT.Rows[0][2].ToString(), "/", objDT.Rows[0][3].ToString(), "/", objDT.Rows[0][4].ToString());
+
+                    foreach (DataRow dr in objDT.Rows)
+                    {
+                        worksheet.Cell("B" + intStartIndex.ToString()).Value = dr[0].ToString();
+                        worksheet.Cell("C" + intStartIndex.ToString()).Value = dr[1].ToString();
+                        worksheet.Range(string.Concat("B", (intStartIndex + 1).ToString(), ":C", (intStartIndex + 1).ToString())).Style.Fill.BackgroundColor = XLColor.LightGray; //색 채우기
+                        worksheet.Cell("B" + intStartIndex.ToString()).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center; //정렬
+                        worksheet.Row(intStartIndex).Height = 18; //셀 높이
+                    }
+                }
+
+                worksheet = workbook.Worksheet(2);          //두번째 sheet열기 
+                worksheet.Protect("******************");    //시트 보호
+
+                //시트별로 설정함
+                #region 프린트 설정
+                worksheet.PageSetup.PaperSize = XLPaperSize.A4Paper;         //인쇄 사이즈 설정
+                worksheet.PageSetup.PageOrientation = XLPageOrientation.Landscape; //가로로 인쇄
+                worksheet.PageSetup.Margins.Top = 0.1;                         //인쇄여백설정
+                worksheet.PageSetup.Margins.Bottom = 0.1;
+                worksheet.PageSetup.Margins.Left = 0.1;
+                worksheet.PageSetup.Margins.Right = 0.1;
+                worksheet.PageSetup.Margins.Footer = 0;
+                worksheet.PageSetup.Margins.Header = 0;
+                worksheet.PageSetup.FitToPages(1, 0);                               //한페이지에 모든 열 맞추기 Fit all columns on one page
+                #endregion
+
+                foreach (DataRow dr in objDT.Rows)
+                {
+                    worksheet.Cell("B" + intStartIndex.ToString()).Value = dr[0].ToString();
+                    worksheet.Cell("C" + intStartIndex.ToString()).Value = dr[1].ToString();
+                    worksheet.Cell("D" + intStartIndex.ToString()).Value = dr[2].ToString();
+                    worksheet.Cell("E" + intStartIndex.ToString()).Value = dr[3].ToString();
+                    worksheet.Cell("F" + intStartIndex.ToString()).Value = dr[4].ToString();
+                    worksheet.Cell("G" + intStartIndex.ToString()).Value = dr[5].ToString();
+                    worksheet.Cell("H" + intStartIndex.ToString()).Value = dr[6].ToString();
+
+                    intStartIndex++;
+                }
+
+                HttpContext.Current.Response.Clear();
+                HttpContext.Current.Response.Buffer = true;
+                HttpContext.Current.Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                HttpContext.Current.Response.AddHeader("Content-Disposition", "attachment;filename=\"" + HttpUtility.UrlEncode(strSaveFileName + ".xlsx", Encoding.GetEncoding("UTF-8")).Replace("+", "%20") + "\"");
+
+                using (System.IO.MemoryStream MyMemoryStream = new System.IO.MemoryStream())
+                {
+                    workbook.SaveAs(MyMemoryStream);
+                    MyMemoryStream.WriteTo(HttpContext.Current.Response.OutputStream);
+                    HttpContext.Current.Response.Flush();
+                    HttpContext.Current.Response.End();
+                }
+            }
+            catch
+            {
+                HttpContext.Current.Response.StatusCode = (int)System.Net.HttpStatusCode.NoContent; //HTTPCode 200이 아닌 값
+            }
+        }
+        #endregion
     }
 }
